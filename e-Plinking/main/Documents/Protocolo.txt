@@ -1,0 +1,29 @@
+O ESP 32 vai enviar uma string, o protocolo é:
+
+
+
+02, B1[4], B2[4], B3, B4[8], B5[4], B6[8], B7[5] 03
+
+
+
+Onde: 
+
+02: STX
+
+B1[4]: String número de disparos
+
+B2[4]: String Pontuação
+
+B3: Zona alvejada
+
+B4: Linha da tabela a ser escrita
+
+B5[8]: String tempo de reação tabela
+
+B6[4]: String disparos tabela
+
+B7[8]: String tempo médio tabela
+
+B8[5]: Pontuação tabela
+
+03: ETX

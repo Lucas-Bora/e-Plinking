@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alvo IPSC Clássico</title>
+    <style>
+        body {
+            background-color: #2c3e50; /* Fundo escuro para destacar a folha */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .folha-alvo {
+            background-color: #ffffff;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Ajuste de tamanho para o ecrã */
+        svg {
+            max-width: 100%;
+            height: auto;
+            width: 500px; /* Tamanho base de exibição */
+        }
+
+        /* Estilo comum para as letras do alvo */
+        .letra {
+            font-weight: bold;
+            font-size: 52px;
+            fill: #000000;
+            text-anchor: middle; /* Centraliza horizontalmente no X */
+            dominant-baseline: middle; /* Centraliza verticalmente no Y */
+        }
+
+        /* Estilo para o botão de ação */
+        .btn-acao {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #e67e22;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+            .btn-acao:hover {
+                background-color: #d35400;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="folha-alvo">
+
+        <!--
+             O viewBox cria um plano cartesiano interno de 1000x1200.
+             Isto permite-nos usar coordenadas precisas sem decimais.
+        -->
+        <svg viewBox="0 0 1000 1200" xmlns="http://www.w3.org/2000/svg">
+
+            <!--
+                 1. Borda Exterior Sólida
+                 Representa o limite de corte do cartão do alvo.
+            -->
+            <polygon points="280,30 720,30 970,280 970,920 720,1170 280,1170 30,920 30,280"
+                     fill="none"
+                     stroke="#000000"
+                     stroke-width="3" />
+
+            <!--
+                 2. Linha da Zona D (Tracejada)
+                 Fica logo no interior da borda do cartão.
+            -->
+            <polygon points="300,50 700,50 950,300 950,900 700,1150 300,1150 50,900 50,300"
+                     fill="none"
+                     stroke="#000000"
+                     stroke-width="5"
+                     />
+
+            <!--
+                 3. Linha da Zona C (Tracejada)
+                 Avança mais para o centro do alvo.
+            -->
+            <polygon points="360,180 640,180 800,380 800,820 640,1020 360,1020 200,820 200,380"
+                     fill="none"
+                     stroke="#000000"
+                     stroke-width="5"
+                     stroke-dasharray="14, 14" />
+
+            <!--
+                 4. Linha da Zona A (Tracejada)
+                 O centro do alvo.
+            -->
+            <polygon id="zona-a"
+                     points="420,320 580,320 660,480 660,720 580,880 420,880 340,720 340,480"
+                     fill="none"
+                     stroke="#000000"
+                     stroke-width="5"
+                     stroke-dasharray="14, 14"
+                     style="transition: fill 0.3s ease;" />
+
+            <!--
+                 5. Textos e Zonas de Pontuação
+                 Colocados nas elevações e espaços corretos baseados na sua imagem.
+            -->
+            <!-- Zona A (Centro) -->
+            <text x="500" y="470" class="letra">A</text>
+
+            <!-- Zona C (Esquerda e Direita) -->
+            <text x="280" y="470" class="letra">C</text>
+            <text x="720" y="470" class="letra">C</text>
+
+            <!-- Zona D (Esquerda e Direita) -->
+            <text x="125" y="470" class="letra">D</text>
+            <text x="875" y="470" class="letra">D</text>
+
+        </svg>
+
+        <!-- Botão para mudar a cor -->
+        <button id="btnCorZonaA" class="btn-acao">Mudar Cor da Zona A</button>
+
+    </div>
+
+    <script>
+        // Apanhamos o botão e o polígono da Zona A pelo ID
+        const btnZonaA = document.getElementById('btnCorZonaA');
+        const poligonoZonaA = document.getElementById('zona-a');
+
+        // Lista de cores (com transparência "0.5" para não tapar a letra)
+        const coresZonaA = [
+            'none',                           // Transparente (original)
+            'rgba(231, 76, 60, 0.5)',         // Vermelho
+            'rgba(46, 204, 113, 0.5)',        // Verde
+            'rgba(52, 152, 219, 0.5)',        // Azul
+            'rgba(241, 196, 15, 0.5)'         // Amarelo
+        ];
+
+        let indiceCorAtual = 0;
+
+        // Adicionamos o evento de clique ao botão
+        btnZonaA.addEventListener('click', () => {
+            // Avança na lista de cores
+            indiceCorAtual = (indiceCorAtual + 1) % coresZonaA.length;
+
+            // Aplica a nova cor ao atributo 'fill' do elemento SVG
+            poligonoZonaA.setAttribute('fill', coresZonaA[indiceCorAtual]);
+        });
+    </script>
+</body>
+</html>
