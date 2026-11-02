@@ -1,29 +1,68 @@
-O ESP 32 vai enviar uma string, o protocolo é:
+PROTOCOLO DA PÁGINA FREE SHOOT
+================================
+
+O firmware envia dois tipos de frame WebSocket de texto:
+
+1. CONTEXTO DA SESSÃO
+---------------------
+
+Formato:
+
+CTX|ESTADO|TEMPO_MS|EVENTOS_PERDIDOS
+
+Exemplo:
+
+CTX|ROUND_2|15320|0
+
+Campos:
+
+- CTX: identificador fixo da mensagem;
+- ESTADO: IDLE, ROUND_1, ROUND_2, ROUND_3, ROUND_4, ROUND_5, STOPPED,
+  COMPLETE ou ERROR;
+- TEMPO_MS: tempo acumulado da sessão em milissegundos;
+- EVENTOS_PERDIDOS: contador de eventos rejeitados por fila cheia ou fonte de
+  timestamp indisponível.
+
+Ao reconectar, esta mensagem é enviada antes das cinco linhas da tabela.
 
 
+2. ATUALIZAÇÃO DE UMA LINHA
+---------------------------
 
-02, B1[4], B2[4], B3, B4[8], B5[4], B6[8], B7[5] 03
+Formato fixo de 40 bytes:
+
+02 B1[4] B2[4] B3 B4 B5 B6 B7 B8[8] B9[4] B10[8] B11[5] 03
+
+Onde:
+
+- 02: STX;
+- B1[4]: total de disparos;
+- B2[4]: pontuação total;
+- B3: zona alvejada (0 sem flash; 1, 2 ou 3 para as zonas);
+- B4: linha da tabela (1 a 5);
+- B5: quantidade de disparos Z1 na linha;
+- B6: quantidade de disparos Z2 na linha;
+- B7: quantidade de disparos Z3 na linha;
+- B8[8]: última reação no formato MM:SSmmm;
+- B9[4]: disparos da linha;
+- B10[8]: tempo médio da linha no formato MM:SSmmm;
+- B11[5]: pontuação da linha;
+- 03: ETX.
+
+Na reconexão, o firmware envia cinco pacotes, um para cada linha, com B3=0.
+Assim, a página é reconstruída sem piscar uma zona referente a um disparo antigo.
 
 
+3. COMANDOS DA PÁGINA
+---------------------
 
-Onde: 
-
-02: STX
-
-B1[4]: String número de disparos
-
-B2[4]: String Pontuação
-
-B3: Zona alvejada
-
-B4: Linha da tabela a ser escrita
-
-B5[8]: String tempo de reação tabela
-
-B6[4]: String disparos tabela
-
-B7[8]: String tempo médio tabela
-
-B8[5]: Pontuação tabela
-
-03: ETX
+- INICIAR:
+  - em IDLE/STOPPED/COMPLETE/ERROR, cria uma sessão limpa em ROUND_1;
+  - em um ROUND_n ainda inativo, inicia timer e captura dessa rodada;
+  - em um ROUND_n já ativo, apenas confirma o contexto sem reiniciar;
+- PAUSAR: fecha a captura, processa a FIFO já existente, congela o cronômetro,
+  encerra o ROUND_n atual e muda o estado para sua sucessora ainda inativa; em
+  ROUND_5, publica COMPLETE;
+- PARAR: fecha a captura, processa a FIFO já existente, congela o cronômetro,
+  preserva os resultados e publica STOPPED;
+- LIMPAR: fecha a captura, esvazia filas, zera contexto/cronômetro e volta a IDLE.

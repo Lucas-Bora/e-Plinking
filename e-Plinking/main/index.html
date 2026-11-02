@@ -152,7 +152,7 @@
             flex: 1;
             justify-content: center;
             align-items: top;
-            font-size: 90px;
+            font-size: 85px;
             font-family: 'DigitaldreamFatSkew';
             color: rgb(234, 41, 16);
         }
@@ -231,10 +231,46 @@
         .shot-table td {
             color: rgb(234, 41, 16);
             height: 50px;
-            font-size: 45px;
+            font-size: 35px;
             text-align: center;
             border: 2px dashed #7b7979;
             padding-top: 5px;
+        }
+
+        /*
+         * Estado recuperável da sessão.
+         *
+         * Estes campos são preenchidos pela mensagem CTX enviada pela máquina
+         * Free shoot. O navegador interpola o cronômetro localmente enquanto o
+         * estado é ROUND_1...ROUND_5 e volta a sincronizá-lo em cada atualização.
+         */
+        .session-status {
+            width: 584px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+            color: rgb(234, 41, 16);
+            font-family: 'DigitaldreamFatSkew';
+            text-align: center;
+        }
+
+        .session-status>div {
+            border: 2px solid #7b7979;
+            border-radius: 10px;
+            padding: 12px 6px;
+            background-color: #373839;
+        }
+
+        .session-label {
+            display: block;
+            font-size: 25px;
+            margin-bottom: 8px;
+        }
+
+        .session-value {
+            display: block;
+            font-size: 22px;
         }
     </style>
 </head>
@@ -271,6 +307,17 @@
             </div>
         </div>
 
+        <div class="session-status">
+            <div>
+                <span class="session-label">ROUND</span>
+                <span class="session-value" id="estadoSessao">AGUARDANDO</span>
+            </div>
+            <div>
+                <span class="session-label">TIME</span>
+                <span class="session-value" id="tempoSessao">00:00.000</span>
+            </div>
+        </div>
+
         <div class="folha-alvo">
 
             <svg viewBox="0 0 1000 1200" xmlns="http://www.w3.org/2000/svg">
@@ -291,8 +338,11 @@
             <button id="btnIniciar" class="btn-acao" style="border-color: rgb(28, 177, 226);
                         color: rgb(28, 177, 226)" ;>INICIAR <!--Aqui envia um evento para o ESP32-->
             </button>
-            <button id="btnParar" class="btn-acao" style="border-color: rgb(197, 234, 16);
-                        color: rgb(197, 234, 16)" ;>PARAR <!--Aqui envia um evento para o ESP32-->
+            <button id="btnPausar" class="btn-acao" style="border-color: rgb(197, 234, 16);
+                        color: rgb(197, 234, 16)" ;>PAUSAR <!--Preserva a rodada atual para retomada-->
+            </button>
+            <button id="btnParar" class="btn-acao" style="border-color: rgb(238, 126, 18);
+                        color: rgb(238, 126, 18)" ;>PARAR <!--Encerra antecipadamente a sessão-->
             </button>
             <button id="btnLimpar" class="btn-acao" style="border-color: rgb(228, 19, 12);
                         color: rgb(228, 19, 12)" ;>LIMPAR <!--Aqui envia um evento para o ESP32-->
@@ -302,62 +352,62 @@
         <table class="shot-table">
             <thead>
                 <tr>
-                    <th>T. de reacao</th>
+                    <!--Cabeçalho da tabela-->
+                    <th>Reacão.</th>
                     <th>Disparos</th>
-                    <th>T. med. disparos</th>
-                    <th>Pontuacao</th>
+                    <th>T. Méd</th>
+                    <th>Z1</th>
+                    <th>Z2</th>
+                    <th>Z3</th>
+                    <th>Pont</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
+                    <!--Linhas da tabela, carregando o valor default. Estes valores serão recebidos do ESP32-->
                     <td id="R1">--:----</td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
                     <td id="D1"> 000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "000", depois recebe valor do ESP32-->
                     <td id="M1"> --:---- </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
+                    <td id="Z1_1"> 000 </td>
+                    <td id="Z2_1"> 000 </td>
+                    <td id="Z3_1"> 000 </td>
                     <td id="P1"> 0000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "0000", depois recebe valor do ESP32-->
                 </tr>
                 <tr>
                     <td id="R2"> --:----</td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
                     <td id="D2"> 000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "000", depois recebe valor do ESP32-->
                     <td id="M2"> --:---- </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
+                    <td id="Z1_2"> 000 </td>
+                    <td id="Z2_2"> 000 </td>
+                    <td id="Z3_2"> 000 </td>
                     <td id="P2"> 0000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "0000", depois recebe valor do ESP32-->
                 </tr>
                 <tr>
                     <td id="R3"> --:----</td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
                     <td id="D3"> 000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "000", depois recebe valor do ESP32-->
                     <td id="M3"> --:---- </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
+                    <td id="Z1_3"> 000 </td>
+                    <td id="Z2_3"> 000 </td>
+                    <td id="Z3_3"> 000 </td>
                     <td id="P3"> 0000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "0000", depois recebe valor do ESP32-->
                 </tr>
                 <tr>
                     <td id="R4"> --:----</td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
                     <td id="D4"> 000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "000", depois recebe valor do ESP32-->
                     <td id="M4"> --:---- </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
+                    <td id="Z1_4"> 000 </td>
+                    <td id="Z2_4"> 000 </td>
+                    <td id="Z3_4"> 000 </td>
                     <td id="P4"> 0000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "0000", depois recebe valor do ESP32-->
                 </tr>
                 <tr>
                     <td id="R5"> --:----</td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
                     <td id="D5"> 000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "000", depois recebe valor do ESP32-->
                     <td id="M5"> --:---- </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "--:----", depois recebe valor do ESP32-->
+                    <td id="Z1_5"> 000 </td>
+                    <td id="Z2_5"> 000 </td>
+                    <td id="Z3_5"> 000 </td>
                     <td id="P5"> 0000 </td>
-                    <!--Aqui uma varivavel *Inicia com o texto "0000", depois recebe valor do ESP32-->
                 </tr>
             </tbody>
         </table>
@@ -380,10 +430,24 @@
 
     const txtDisparos = document.getElementById("disparos");
     const txtPontuacao = document.getElementById("pontuacao");
+    const txtEstadoSessao = document.getElementById("estadoSessao");
+    const txtTempoSessao = document.getElementById("tempoSessao");
+    const txtEventosPerdidos = document.getElementById("eventosPerdidos");
 
     const btnIniciar = document.getElementById("btnIniciar");
+    const btnPausar = document.getElementById("btnPausar");
     const btnParar = document.getElementById("btnParar");
     const btnLimpar = document.getElementById("btnLimpar");
+
+    /*
+     * Base local do cronômetro.
+     *
+     * O ESP32 continua sendo a fonte da verdade. O JavaScript só soma o tempo
+     * decorrido desde a última mensagem CTX para evitar tráfego periódico.
+     */
+    let estadoSessao = "IDLE";
+    let tempoBaseMs = 0;
+    let instanteSincronizacaoMs = performance.now();
 
 
     // ==============================
@@ -396,7 +460,11 @@
         console.log("Host atual:", location.host);
 
 
-        ws = new WebSocket("ws://192.168.4.1/ws");
+        /*
+         * location.host evita fixar 192.168.4.1 no código. Isso também funciona
+         * caso o endereço do AP seja alterado posteriormente.
+         */
+        ws = new WebSocket("ws://" + location.host + "/ws");
 
         console.log("WebSocket criado para:", ws.url);
 
@@ -405,8 +473,16 @@
         };
 
         ws.onmessage = function (event) {
-            tratarPacote(event.data);
-            console.log("Recebido");
+            /*
+             * CTX recupera estado/tempo/overflow. O pacote fixo de 40 bytes
+             * recupera totais e uma linha da tabela.
+             */
+            if (typeof event.data === "string" &&
+                event.data.startsWith("CTX|")) {
+                tratarContexto(event.data);
+            } else {
+                tratarPacote(event.data);
+            }
         };
 
         ws.onclose = function () {
@@ -427,28 +503,104 @@
     // Tratamento do pacote recebido
     // ==============================
 
+    function tratarContexto(mensagem) {
+        const campos = mensagem.split("|");
+
+        if (campos.length !== 4 || campos[0] !== "CTX") {
+            console.log("Contexto inválido:", mensagem);
+            return;
+        }
+
+        const novoTempoBaseMs = Number(campos[2]);
+        const eventosPerdidos = Number(campos[3]);
+
+        if (!Number.isFinite(novoTempoBaseMs) ||
+            !Number.isFinite(eventosPerdidos)) {
+            console.log("Valores inválidos no contexto:", mensagem);
+            return;
+        }
+
+        estadoSessao = campos[1];
+        tempoBaseMs = novoTempoBaseMs;
+        instanteSincronizacaoMs = performance.now();
+
+        const nomesEstado = {
+            IDLE: "AGUARDANDO",
+            ROUND_1: "RODADA 1",
+            ROUND_2: "RODADA 2",
+            ROUND_3: "RODADA 3",
+            ROUND_4: "RODADA 4",
+            ROUND_5: "RODADA 5",
+            PAUSED: "PAUSADO",
+            STOPPED: "ENCERRADO",
+            COMPLETE: "CONCLUÍDO",
+            ERROR: "ERRO"
+        };
+
+        txtEstadoSessao.innerText =
+            nomesEstado[estadoSessao] || estadoSessao;
+        //txtEventosPerdidos.innerText = String(eventosPerdidos);
+        atualizarCronometro();
+    }
+
+    function formatarTempo(milissegundos) {
+        const total = Math.max(0, Math.floor(milissegundos));
+        const minutos = Math.floor(total / 60000);
+        const segundos = Math.floor(total / 1000) % 60;
+        const milesimos = total % 1000;
+
+        return String(minutos).padStart(2, "0") + ":" +
+            String(segundos).padStart(2, "0") + "." +
+            String(milesimos).padStart(3, "0");
+    }
+
+    function atualizarCronometro() {
+        let tempoExibidoMs = tempoBaseMs;
+
+        /*
+         * O tempo avança localmente somente durante uma rodada ativa.
+         *
+         * PAUSED, STOPPED, COMPLETE, IDLE e ERROR exibem o último valor
+         * congelado recebido do ESP32. A expressão explícita evita aceitar
+         * estados desconhecidos como se fossem estados de execução.
+         */
+        const rodadaAtiva =
+            estadoSessao === "ROUND_1" ||
+            estadoSessao === "ROUND_2" ||
+            estadoSessao === "ROUND_3" ||
+            estadoSessao === "ROUND_4" ||
+            estadoSessao === "ROUND_5";
+
+        if (rodadaAtiva) {
+            tempoExibidoMs +=
+                performance.now() - instanteSincronizacaoMs;
+        }
+
+        txtTempoSessao.innerText = formatarTempo(tempoExibidoMs);
+    }
+
     function tratarPacote(pacote) {
         /*
             Protocolo:
 
-            STX B1 B2 B3 B4 B5 B6 B7 ETX
+            STX, B1[4], B2[4], B3, B4, B5, B6. B7, B8[8], B9[4], B10[8], B11[5] ETX
 
             STX = 0x02
             B1  = 4 caracteres - disparos geral
             B2  = 4 caracteres - pontuação geral
             B3  = 1 caracteres - Zona alvejada
             B4  = 1 caractere  - linha da tabela
-            B5  = 8 caracteres - tempo de reação
-            B6  = 4 caracteres - disparos da tabela
-            B7  = 8 caracteres - tempo médio
-            B8  = 5 caracteres - pontuação da tabela
+            B5  = 1 caractere  - Acertos Z1
+            B6  = 1 caractere  - Acertos Z2
+            B7  = 1 caractere  - Acertos Z3
+            B8  = 8 caracteres - tempo de reação
+            B9  = 4 caracteres - disparos da tabela
+            B10 = 8 caracteres - tempo médio
+            B11 = 5 caracteres - pontuação da tabela
             ETX = 0x03
         */
 
-        // TODO: Remover
-        console.log("Valor do pacote", pacote.length, pacote);
-
-        if (pacote.length !== 37) {
+        if (pacote.length !== 40) {
             console.log("Pacote com tamanho inválido:", pacote.length);
 
             return;
@@ -459,13 +611,13 @@
             return;
         }
 
-        if (pacote.charCodeAt(36) !== 3) {
+        if (pacote.charCodeAt(39) !== 3) {
             console.log("ETX inválido");
-            console.log("Valor de ETX", pacote.charCodeAt(36));
+            console.log("Valor de ETX", pacote.charCodeAt(39));
             return;
         }
 
-        const dados = pacote.substring(1, 36);
+        const dados = pacote.substring(1, 39);
 
 
         // ===================================================================
@@ -473,12 +625,15 @@
         // ===================================================================
         const b1 = dados.substring(0, 4);
         const b2 = dados.substring(4, 8);
-        const b3 = dados.substring(4, 8);
+        const b3 = dados.substring(8, 9);
         const b4 = dados.substring(9, 10);
-        const b5 = dados.substring(10, 18);
-        const b6 = dados.substring(18, 22);
-        const b7 = dados.substring(22, 30);
-        const b8 = dados.substring(30, 35);
+        const b5 = dados.substring(10, 11);
+        const b6 = dados.substring(11, 12);
+        const b7 = dados.substring(12, 13);
+        const b8 = dados.substring(13, 21);
+        const b9 = dados.substring(21, 25);
+        const b10 = dados.substring(25, 33);
+        const b11 = dados.substring(33, 38);
 
         txtDisparos.innerText = b1;
         txtPontuacao.innerText = b2;
@@ -491,7 +646,7 @@
             piscarZona(b3);
         }
 
-        atualizarLinhaTabela(b4, b5, b6, b7, b8);
+        atualizarLinhaTabela(b4, b5, b6, b7, b8, b9, b10, b11);
     }
 
 
@@ -499,11 +654,16 @@
     // Atualiza linha da tabela
     // ==============================
 
-    function atualizarLinhaTabela(linha, tempoReacao, disparos, tempoMedio, pontuacao) {
+    function atualizarLinhaTabela(linha, Z1, Z2, Z3, tempoReacao, disparos, tempoMedio, pontuacao) {
+
         document.getElementById("R" + linha).innerText = tempoReacao;
         document.getElementById("D" + linha).innerText = disparos;
         document.getElementById("M" + linha).innerText = tempoMedio;
+        document.getElementById("Z1_" + linha).innerText = Z1;
+        document.getElementById("Z2_" + linha).innerText = Z2;
+        document.getElementById("Z3_" + linha).innerText = Z3;
         document.getElementById("P" + linha).innerText = pontuacao;
+
     }
 
 
@@ -514,6 +674,7 @@
     function enviarComando(comando) {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(comando);
+            console.log(comando + " enviado para o ESP32");
         } else {
             console.log("WebSocket não conectado");
         }
@@ -526,8 +687,21 @@
 
     btnIniciar.onclick = function () {
         enviarComando("INICIAR");
+        emitirBip();
     };
 
+    /*
+     * PAUSAR conserva a rodada atual. Um INICIAR posterior retoma essa mesma
+     * rodada sem apagar nenhuma célula ou contador.
+     */
+    btnPausar.onclick = function () {
+        enviarComando("PAUSAR");
+    };
+
+    /*
+     * PARAR encerra a sessão atual. Um INICIAR posterior cria uma nova sessão
+     * em ROUND_1; os resultados encerrados permanecem visíveis até esse momento.
+     */
     btnParar.onclick = function () {
         enviarComando("PARAR");
     };
@@ -542,6 +716,7 @@
     // ==============================
 
     conectarWebSocket();
+    setInterval(atualizarCronometro, 100);
 
     function piscarZona(zona) {
         const mapaZonas = {
@@ -555,10 +730,42 @@
         if (!elemento) return;
 
         elemento.style.fill = "red";
-
+        emitirBip4k();
         setTimeout(() => elemento.style.fill = "none", 150);
+    }
+
+    // ==============================
+    // Gerador de bip sonoro
+    // ==============================
+
+    function emitirBip() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscilador = audioCtx.createOscillator();
+        const ganho = audioCtx.createGain();
+
+        oscilador.type = 'sine'; // Tipo de onda: sine, square, sawtooth, triangle
+        oscilador.frequency.setValueAtTime(440, audioCtx.currentTime); // Frequência em Hz (440Hz = Nota Lá)
+
+        oscilador.connect(ganho);
+        ganho.connect(audioCtx.destination);
+
+        oscilador.start();
+        oscilador.stop(audioCtx.currentTime + 0.5); // Duração de 0.2 segundos
+    }
+        function emitirBip4k() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscilador = audioCtx.createOscillator();
+        const ganho = audioCtx.createGain();
+
+        oscilador.type = 'sine'; // Tipo de onda: sine, square, sawtooth, triangle
+        oscilador.frequency.setValueAtTime(8000, audioCtx.currentTime); // Frequência em Hz (440Hz = Nota Lá)
+
+        oscilador.connect(ganho);
+        ganho.connect(audioCtx.destination);
+
+        oscilador.start();
+        oscilador.stop(audioCtx.currentTime + 0.05); // Duração de 0.2 segundos
     }
 </script>
 
 </html>
-
